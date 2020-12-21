@@ -301,14 +301,15 @@ _testbed('Car', function(testbed) {
 				links.innerText = "Creating replay, please wait..."
 				
 				// --allow-file-access-from-files
-				// gif.worker.js: url to script
+				// gif.worker.js: https://samikoivu.github.io/scripts/gif.worker.js
 				var gif = new GIF({
 					workers: 2,
-					quality: 10
+					quality: 1,
+					workerScript: "https://samikoivu.github.io/scripts/gif.worker.js"
 				  });
 				for (var i=0; i < 240; i++) {
 					  if (frames[frameStart]) {
-					  	gif.addFrame(frames[frameStart]);
+					  	gif.addFrame(frames[frameStart], {delay: 10});
 					  }
 					  frameStart++;
 					if (frameStart > 240) {
