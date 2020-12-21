@@ -92,6 +92,7 @@ var liveZombies = [];
 var arrowFixture = null;
 
 var canvas = document.getElementById('stage');
+var links = document.getElementById('links');
 var frames = new Array(240);
 var frameStart = 0;
 
@@ -296,6 +297,9 @@ _testbed('Car', function(testbed) {
 	testbed.keydown = function(code, char) {
 		switch (char) {
 			case 'R': // save replay as animated gif
+				testbed.pause();
+				links.innerText = "Creating replay, please wait..."
+				
 				// --allow-file-access-from-files
 				// gif.worker.js: url to script
 				var gif = new GIF({
@@ -309,7 +313,12 @@ _testbed('Car', function(testbed) {
 					}
 				}
 				gif.on('finished', function(blob) {
-					window.open(URL.createObjectURL(blob));
+					var a = document.createElement('a');
+      				var linkText = document.createTextNode("Download replay GIF");
+      				a.appendChild(linkText);
+      				a.title = "Replay GIF";
+      				a.href = URL.createObjectURL(blob);
+      				links.appendChild(a);
 				  });
 				  
 				gif.render();
