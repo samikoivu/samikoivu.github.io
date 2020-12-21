@@ -307,7 +307,10 @@ _testbed('Car', function(testbed) {
 					quality: 10
 				  });
 				for (var i=0; i < 240; i++) {
-					  gif.addFrame(frames[frameStart++]);
+					  if (frames[frameStart]) {
+					  	gif.addFrame(frames[frameStart]);
+					  }
+					  frameStart++;
 					if (frameStart > 240) {
 						frameStart = 0;
 					}
