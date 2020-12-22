@@ -303,13 +303,13 @@ _testbed('Car', function(testbed) {
 				// --allow-file-access-from-files
 				// gif.worker.js: https://samikoivu.github.io/scripts/gif.worker.js
 				var gif = new GIF({
-					workers: 2,
-					quality: 1,
+					workers: 10,
+					quality: 30,
 					workerScript: "https://samikoivu.github.io/scripts/gif.worker.js"
 				  });
 				for (var i=0; i < 240; i++) {
 					  if (frames[frameStart]) {
-					  	gif.addFrame(frames[frameStart], {delay: 10});
+					  	gif.addFrame(frames[frameStart], {delay: 1});
 					  }
 					  frameStart++;
 					if (frameStart > 240) {
