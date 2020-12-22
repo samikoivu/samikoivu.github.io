@@ -3,7 +3,10 @@ TOP10:
  Add some graphics
  Fix walking (zombies and driver)
  Easy mode driving
- Getting up, partial force based on angle
+ Getting up bug
+ Shooting to the driving direction
+ 
+
 
 Zombies:
 	Should be slightly soft, but have great friction
@@ -23,30 +26,6 @@ Movement:
  
 Track:
 
-Arrows sticking to Zombies:
-		if (!riding) {
-			this.bikeBody.destroyFixture(driverFixture);
-		}
-		
-		for (ZombieHit zh : this.zombieHits) {
-			if (zh.zombie.m_userData instanceof Zombie.Head) {
-				// TODO: if we knew how we should calc that the impact is enough to kill
-				Zombie zombie = (Zombie) zh.zombie.m_body.m_userData;
-				zh.zombie.m_body.getFixtureList().getNext().setFriction(500f);
-				this.liveZombies.remove(zombie);
-				this.model.addMessage(new Message("Kill!", zh.zombie.getBody(), Color3f.RED));
-			}
-			// TODO: if we knew how we should have the arrow bounce off or penetrate according to impact force/speed
-			FixtureDef fd = new FixtureDef();
-			PolygonShape ps = new PolygonShape();
-			ps.setAsBox(arrowLength, arrowWidth, zh.position, zh.angle);
-			fd.shape = ps;
-			fd.isSensor = true;
-			zh.zombie.m_body.createFixture(fd);
-			m_world.destroyBody(zh.arrow.m_body);
-		}
-		
-		zombieHits.clear();
 
 */   
 var pl = planck, Vec2 = pl.Vec2, Rot = pl.Rot;
@@ -61,6 +40,7 @@ const UD_BIKE = 2;
 const UD_ME = 3;
 const UD_ARROW = 4;
 const UD_ZOMBIE = 5;
+const UD_ZOMBIEHEAD = 6;
 
 var axle1;
 var axle2;
@@ -89,6 +69,7 @@ const arrowOffset = new Vec2(.8, 2);
 var bikeBody = null;
 var driver = null;
 var liveZombies = [];
+var zombieHits = [];
 var arrowFixture = null;
 
 var canvas = document.getElementById('stage');
@@ -299,7 +280,12 @@ _testbed('Car', function(testbed) {
 			case 'R': // save replay as animated gif
 				testbed.pause();
 				links.innerText = "Creating replay, please wait..."
-				
+				var a = document.createElement('a');
+				a.appendChild(document.createTextNode("Screen capture"));
+				a.title = "Screen capture";
+				a.href = canvas.toDataURL();
+				links.appendChild(a); 
+			
 				// --allow-file-access-from-files
 				// gif.worker.js: https://samikoivu.github.io/scripts/gif.worker.js
 				var gif = new GIF({
@@ -322,7 +308,7 @@ _testbed('Car', function(testbed) {
       				a.appendChild(linkText);
       				a.title = "Replay GIF";
       				a.href = URL.createObjectURL(blob);
-      				links.appendChild(a);
+					links.appendChild(a);
 				  });
 				  
 				gif.render();
@@ -340,6 +326,7 @@ _testbed('Car', function(testbed) {
 			frameStart = 0;
 		}
 		
+		///////////////
 		// bike springs
 		var j1 = spring1.getJointTranslation();
 		spring1.setMaxMotorForce(80);
@@ -357,6 +344,34 @@ _testbed('Car', function(testbed) {
 			spring2.setMotorSpeed((spring2.getMotorSpeed() - 10 * j2) * .1);
 		}		
 		
+		/////////////
+		// collisions
+		for (var i=0; i < zombieHits.length; i++) {
+			var zh = zombieHits[i];
+			if (zh.fixture.getUserData() == UD_ZOMBIEHEAD) {
+				// TODO: if we knew how we should calc that the impact is enough to kill
+				for (var lz=0; lz < liveZombies.length; lz++) {
+					if (liveZombies[lz].alive) {
+						if (liveZombies[lz].body == zh.body) {
+							liveZombies[lz].alive = false;
+						}
+					}
+				}
+			}
+			// TODO: if we knew how we should have the arrow bounce off or penetrate according to impact force/speed
+			var fd = {};
+			var pos = zh.body.getPosition().clone();
+			pos.sub(zh.arrow.getPosition());
+			var arrowFixture = zh.body.createFixture(pl.Box(arrowLength, arrowWidth, pos, zh.arrow.getAngle()), fd);
+			arrowFixture.setSensor(true); // TODO not sure if we want this or not
+			world.destroyBody(zh.arrow);
+		}
+		
+		zombieHits = [];
+
+
+		///////////
+		// controls
 		if (!aim) { // controlling bike
 			if (testbed.activeKeys.fire) { // but shift has been pressed, switch to aiming
 				testbed.status("Aiming..");
@@ -482,13 +497,9 @@ _testbed('Car', function(testbed) {
 		testbed.info('←/→: Balance bike, ↑/↓: Accelerate');
 	}
 
-// 'begin-contact'
-// 'end-contact'
-// 'pre-solve'
-// 'post-solve'
-// 'remove-joint'
-// 'remove-fixture'
-// 'remove-body'
+	///////////////////////
+	// Collision processing
+// 'begin-contact' 'end-contact' 'pre-solve' 'post-solve' 'remove-joint' 'remove-fixture' 'remove-body'
 	world.on('begin-contact', function(contact) { // can't modify the world here
 		var fixtureA = contact.getFixtureA();
 		var fixtureB = contact.getFixtureB();
@@ -511,6 +522,13 @@ _testbed('Car', function(testbed) {
 				touchingGround = true;
 			}
 		}
+
+		if (bodyA.getUserData() == UD_ZOMBIE && bodyB.getUserData() == UD_ARROW) {
+			zombieHits.push({body: bodyA, fixture: fixtureA, arrow: bodyB});
+		} else if (bodyB.getUserData() == UD_ZOMBIE && bodyA.getUserData() == UD_ARROW) {
+			zombieHits.push({body: bodyB, fixture: fixtureB, arrow: bodyA});
+		}
+
 	});
 
 	world.on('end-contact', function(contact) { // can't modify the world here
