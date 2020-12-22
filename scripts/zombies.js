@@ -303,7 +303,7 @@ _testbed('Car', function(testbed) {
 				// --allow-file-access-from-files
 				// gif.worker.js: https://samikoivu.github.io/scripts/gif.worker.js
 				var gif = new GIF({
-					workers: 10,
+					workers: 2,
 					quality: 30,
 					workerScript: "https://samikoivu.github.io/scripts/gif.worker.js"
 				  });
