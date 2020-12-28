@@ -5,7 +5,7 @@ TOP10:
  Easy mode driving
  Getting up bug
  Shooting to the driving direction
- 
+
 
 
 Zombies:
@@ -65,6 +65,7 @@ var bikeTurnTicks = 0;
 const arrowLength = .38;
 const arrowWidth = .01;
 const arrowOffset = new Vec2(.8, 2);
+const arrowOffsetReverse = new Vec2(-.8, 2);
 
 var bikeBody = null;
 var driver = null;
@@ -76,6 +77,7 @@ var canvas = document.getElementById('stage');
 var links = document.getElementById('links');
 var frames = new Array(240);
 var frameStart = 0;
+var frameStoreTick = 0;
 
 _testbed('Car', function(testbed) {
     testbed.speed = 1;
@@ -83,6 +85,7 @@ _testbed('Car', function(testbed) {
 	testbed.ratio = 16
 	testbed.scaleY = -1;
 	testbed.scaleX = 1;
+	//testbed.background = 0xFF0000;
 
     world = new pl.World({
 	  gravity : Vec2(0, -10)
@@ -320,10 +323,13 @@ _testbed('Car', function(testbed) {
 		//////////////////////////
 		// store frames for replay
 		//////////////////////////
-		context = canvas.getContext('2d');
-		frames[frameStart++] = context.getImageData(0, 0, canvas.width, canvas.height);
-		if (frameStart > 240) {
-			frameStart = 0;
+		if (frameStoreTick++ > 30) {
+			context = canvas.getContext('2d');
+			frames[frameStart++] = context.getImageData(0, 0, canvas.width, canvas.height);
+			if (frameStart > 240) {
+				frameStart = 0;
+			}
+			frameStoreTick = 0;
 		}
 		
 		///////////////
@@ -360,9 +366,10 @@ _testbed('Car', function(testbed) {
 			}
 			// TODO: if we knew how we should have the arrow bounce off or penetrate according to impact force/speed
 			var fd = {};
+			// TODO the angle looks right, but the position needs the rotation magic
 			var pos = zh.body.getPosition().clone();
 			pos.sub(zh.arrow.getPosition());
-			var arrowFixture = zh.body.createFixture(pl.Box(arrowLength, arrowWidth, pos, zh.arrow.getAngle()), fd);
+			var arrowFixture = zh.body.createFixture(pl.Box(arrowLength, arrowWidth, pos, zh.arrow.getAngle()-zh.body.getAngle()), fd);
 			arrowFixture.setSensor(true); // TODO not sure if we want this or not
 			world.destroyBody(zh.arrow);
 		}
@@ -753,17 +760,20 @@ function createBike(x, y) {
 
 function createArrow() {
 	var fd = {};
+	var pos = (drivingDirection == 1) ? arrowOffset : arrowOffsetReverse;
+	var angle = (drivingDirection == 1) ? aimAngle : (Math.PI * 2 - aimAngle);
 	if (riding) {
-		arrowFixture = bikeBody.createFixture(pl.Box(arrowLength, arrowWidth, arrowOffset, aimAngle), fd);
+		arrowFixture = bikeBody.createFixture(pl.Box(arrowLength, arrowWidth, pos, angle), fd);
 	} else {
-		arrowFixture = driver.createFixture(pl.Box(arrowLength, arrowWidth, arrowOffset, aimAngle), fd);		
+		arrowFixture = driver.createFixture(pl.Box(arrowLength, arrowWidth, pos, angle), fd);		
 	}
 	arrowFixture.setUserData(UD_BIKE);
 }
 
 function launchArrow() {
-	var offset = arrowOffset.clone();
+	var offset = (drivingDirection == 1) ? arrowOffset.clone() : arrowOffsetReverse.clone();
 	var rot;
+	var angle = (drivingDirection == 1) ? aimAngle : (Math.PI * 2 - aimAngle);
 
 	if (riding) {
 		bikeBody.destroyFixture(arrowFixture);
@@ -797,7 +807,7 @@ function launchArrow() {
 
 	var arrowBody = world.createBody(bd);
 	arrowBody.setUserData(UD_ARROW);
-	arrowBody.createFixture(pl.Box(arrowLength, arrowWidth, new Vec2(0, 0), aimAngle+rot.getAngle()), fd);
+	arrowBody.createFixture(pl.Box(arrowLength, arrowWidth, Vec2(0, 0), angle+rot.getAngle()), fd);
 
-	arrowBody.applyForceToCenter(new Vec2(Math.cos(aimAngle)*200, Math.sin(aimAngle + rot.getAngle())*200));
+	arrowBody.applyForceToCenter(Vec2(Math.cos(aimAngle)*200, Math.sin(angle + rot.getAngle())*200));
 }

@@ -22926,7 +22926,11 @@ function AppLoader(app, configs) {
 
   function render() {
     context.setTransform(1, 0, 0, 1, 0, 0);
-    context.clearRect(0, 0, width, height);
+    // context.clearRect(0, 0, width, height);
+    var fs = context.fillStyle;
+    context.fillStyle = 0;
+    context.fillRect(0, 0, width, height);
+    context.fillStyle = fs;
     root.render(context);
   }
 
