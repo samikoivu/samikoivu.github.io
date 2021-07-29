@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="user-scalable=no, width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Memory Game</title>
+</head>
+<body>
+  <div class="center">
+    <div class="header">
+      <h3 class="title">Memory Game - <button onclick="startFaces()">Start a new game with faces</button> - <button onclick="startNumbers()">Start a new game with numbers</button></h3>
+    </div>
+    <div id="status">...</div>
+    <table>
+      <tr>
+        <td><img id="card00" width="128" height="128" src="numbers/blank.png" onclick="flip(0,0, this.id)"/></td>
+        <td><img id="card10" width="128" height="128" src="numbers/blank.png" onclick="flip(1,0, this.id)"/></td>
+        <td><img id="card20" width="128" height="128" src="numbers/blank.png" onclick="flip(2,0, this.id)"/></td>
+        <td><img id="card30" width="128" height="128" src="numbers/blank.png" onclick="flip(3,0, this.id)"/></td>
+        <td><img id="card40" width="128" height="128" src="numbers/blank.png" onclick="flip(4,0, this.id)"/></td>
+      </tr>
+      <tr>
+        <td><img id="card01" width="128" height="128" src="numbers/blank.png" onclick="flip(0,1, this.id)"/></td>
+        <td><img id="card11" width="128" height="128" src="numbers/blank.png" onclick="flip(1,1, this.id)"/></td>
+        <td><img id="card21" width="128" height="128" src="numbers/blank.png" onclick="flip(2,1, this.id)"/></td>
+        <td><img id="card31" width="128" height="128" src="numbers/blank.png" onclick="flip(3,1, this.id)"/></td>
+        <td><img id="card41" width="128" height="128" src="numbers/blank.png" onclick="flip(4,1, this.id)"/></td>
+      </tr>
+      <tr>
+        <td><img id="card02" width="128" height="128" src="numbers/blank.png" onclick="flip(0,2, this.id)"/></td>
+        <td><img id="card12" width="128" height="128" src="numbers/blank.png" onclick="flip(1,2, this.id)"/></td>
+        <td><img id="card22" width="128" height="128" src="numbers/blank.png" onclick="flip(2,2, this.id)"/></td>
+        <td><img id="card32" width="128" height="128" src="numbers/blank.png" onclick="flip(3,2, this.id)"/></td>
+        <td><img id="card42" width="128" height="128" src="numbers/blank.png" onclick="flip(4,2, this.id)"/></td>
+      </tr>
+      <tr>
+        <td><img id="card03" width="128" height="128" src="numbers/blank.png" onclick="flip(0,3, this.id)"/></td>
+        <td><img id="card13" width="128" height="128" src="numbers/blank.png" onclick="flip(1,3, this.id)"/></td>
+        <td><img id="card23" width="128" height="128" src="numbers/blank.png" onclick="flip(2,3, this.id)"/></td>
+        <td><img id="card33" width="128" height="128" src="numbers/blank.png" onclick="flip(3,3, this.id)"/></td>
+        <td><img id="card43" width="128" height="128" src="numbers/blank.png" onclick="flip(4,3, this.id)"/></td>
+      </tr>
+      <tr>
+        <td><img id="card04" width="128" height="128" src="numbers/blank.png" onclick="flip(0,4, this.id)"/></td>
+        <td><img id="card14" width="128" height="128" src="numbers/blank.png" onclick="flip(1,4, this.id)"/></td>
+        <td><img id="card24" width="128" height="128" src="numbers/blank.png" onclick="flip(2,4, this.id)"/></td>
+        <td><img id="card34" width="128" height="128" src="numbers/blank.png" onclick="flip(3,4, this.id)"/></td>
+        <td><img id="card44" width="128" height="128" src="numbers/blank.png" onclick="flip(4,4, this.id)"/></td>
+      </tr>
+      <tr>
+        <td><img id="card05" width="128" height="128" src="numbers/blank.png" onclick="flip(0,5, this.id)"/></td>
+        <td><img id="card15" width="128" height="128" src="numbers/blank.png" onclick="flip(1,5, this.id)"/></td>
+        <td><img id="card25" width="128" height="128" src="numbers/blank.png" onclick="flip(2,5, this.id)"/></td>
+        <td><img id="card35" width="128" height="128" src="numbers/blank.png" onclick="flip(3,5, this.id)"/></td>
+        <td><img id="card45" width="128" height="128" src="numbers/blank.png" onclick="flip(4,5, this.id)"/></td>
+      </tr>
+
+    </table>
+  </div>
+
+  <script>
+    const PLAYING_NO_TURNED = 0;
+    const PLAYING_ONE_TURNED = 1;
+    const WAIT = 2;
+    const GAME_ENDED = 3;
+    
+    var turns = 0;
+    
+    var state = GAME_ENDED;
+    var firstTurnedX = 0;
+    var firstTurnedY = 0;
+    var secondTurnedX = 0;
+    var secondTurnedY = 0;
+    
+    var cards = [
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0]
+    ];
+    var solved = [
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0]
+    ];
+    var solvedCount = 0;
+    var base = "numbers/"
+
+    function startNumbers() {
+      base = "numbers/"
+      newGame()
+    }
+
+    function startFaces() {
+      base = "faces/"
+      newGame()
+    }
+
+    function status(message) {
+      document.getElementById("status").innerHTML = message;
+    }
+    
+    function shuffle(array) {
+      var currentIndex = array.length,  randomIndex;
+    
+      // While there remain elements to shuffle...
+      while (0 !== currentIndex) {
+    
+        // Pick a remaining element...
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+    
+        // And swap it with the current element.
+        [array[currentIndex], array[randomIndex]] = [
+          array[randomIndex], array[currentIndex]];
+      }
+    
+      return array;
+    }
+    function newGame() {
+      // reset score
+      turns = 0;
+      solvedCount = 0;
+    
+      // choose 15 cards to use
+      var curSet = [];
+      for (var i=0; i < 15; i++) {
+          var fi = -1;
+          do {
+            fi = Math.floor(Math.random() * 135);
+          } while (curSet.indexOf(fi) != -1);
+          curSet.push(fi);
+          curSet.push(fi); // add pair
+      }
+    
+      // shuffle and use this as the order
+      shuffle(curSet);
+    
+      var i = 0;
+      for (var y=0; y < 6; y++) {
+          for (var x = 0; x < 5; x++) {
+              var index = curSet[i++];
+              cards[x][y] = index;
+    
+              solved[x][y] = 0;
+
+              var el = document.getElementById('card' + x + y)
+              el.src = "numbers/blank.png"
+            }
+      }
+    
+      state = PLAYING_NO_TURNED;
+      status("Turn any card")
+    
+    }
+    
+    function flip(x, y, id) {
+      // alert("flipped " + x + ", " + y + "  " + id)
+      var el = document.getElementById(id)
+    
+      if (state == PLAYING_NO_TURNED) { // turn first card
+          // check it hasn't been solved already
+          if (solved[x][y] != 0) {
+              return;
+          }
+    
+          turns++;
+          el.src = base + "im" + cards[x][y] + ".jpg";
+          firstTurnedX = x;
+          firstTurnedY = y;
+          state = PLAYING_ONE_TURNED;
+          status("Try to find the pair")
+      } else if (state == PLAYING_ONE_TURNED) {
+          // check it's not the one already turned
+          if (firstTurnedX == x && firstTurnedY == y) {
+            status("This is the first card, choose a different card.")
+              return;
+          }
+    
+          // check it hasn't been solved already
+          if (solved[x][y] != 0) {
+            status("This card has already been solved, choose a different card.")
+              return;
+          }
+    
+          turns++;
+          el.src = base + "im" + cards[x][y] + ".jpg";
+    
+          secondTurnedX = x;
+          secondTurnedY = y;
+    
+          // check if match
+          var match = cards[x][y] == cards[firstTurnedX][firstTurnedY];
+    
+          if (match) {
+              // leave the cards facing up as they are, mark them as solved
+              state = PLAYING_NO_TURNED;
+    
+              solved[firstTurnedX][firstTurnedY] = true;
+              solved[secondTurnedX][secondTurnedY] = true;
+              solvedCount++;
+              if (solvedCount == 15) {
+                  state = GAME_ENDED;
+                  status("Done! " +  turns + " cards turned.")
+              } else {
+                status("You found the pair.")
+              }
+          } else {
+              // leave the cards facing up so the user can memorize them, this could be timed in the future
+              // mark the state so that an additional click gets you back to the default status
+              state = WAIT;
+              status("Not a pair. Memorize cards.")
+              setTimeout(function() {
+                // turn cards back and set to no turned
+                var first = document.getElementById('card' + firstTurnedX + firstTurnedY)
+                var second = document.getElementById('card' + secondTurnedX + secondTurnedY)
+                first.src = "numbers/blank.png"
+                second.src = "numbers/blank.png"
+                state = PLAYING_NO_TURNED;
+                status("Turn any card")
+              }, 1500);
+          }
+      } else if (state == GAME_ENDED) {
+      }
+    
+    }
+    </script>
+    
+
+</body></html>
