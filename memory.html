@@ -131,6 +131,15 @@
       // reset score
       turns = 0;
       solvedCount = 0;
+
+      // preload images?
+      var preload = [];
+      for (var i=0; i < 135; i++) {
+        var img = new Image();
+        img.src = base + "im" + i + ".jpg";
+        preload.push(img);
+      }
+
     
       // choose 15 cards to use
       var curSet = [];
@@ -176,6 +185,7 @@
     
           turns++;
           el.src = base + "im" + cards[x][y] + ".jpg";
+          
           firstTurnedX = x;
           firstTurnedY = y;
           state = PLAYING_ONE_TURNED;
